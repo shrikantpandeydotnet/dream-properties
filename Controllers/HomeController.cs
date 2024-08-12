@@ -1,4 +1,6 @@
-﻿using DreamProperties.Models;
+﻿
+using DreamProperties.Models;
+using DreamProperties.Repository;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -6,11 +8,11 @@ namespace DreamProperties.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly IContactMessageRepository contactMessageRepository;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(IContactMessageRepository contactMessageRepository)
         {
-            _logger = logger;
+            this.contactMessageRepository = contactMessageRepository;
         }
 
         public IActionResult Index()
@@ -18,15 +20,20 @@ namespace DreamProperties.Controllers
             return View();
         }
 
-        public IActionResult Privacy()
+        [HttpPost]
+        public async Task<IActionResult> SendMessage(string name, string email, string subject, string message)
         {
-            return View();
-        }
+            var contactMessage = new ContactMessage
+            {
+                Name = name,
+                Email = email,
+                Subject = subject,
+                Message = message
+            };
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            await this.contactMessageRepository.SaveContactMessages(contactMessage);
+
+            return Json(new { success = true, responseText = "Your message has been successfully saved." });
         }
     }
 }
